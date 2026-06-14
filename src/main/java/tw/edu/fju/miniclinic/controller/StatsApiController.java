@@ -1,20 +1,16 @@
 package tw.edu.fju.miniclinic.controller;
 
-import org.springframework.http.ResponseEntity;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tw.edu.fju.miniclinic.dto.StatsResponse;
+
 import tw.edu.fju.miniclinic.model.AppointmentRepository;
 import tw.edu.fju.miniclinic.model.DoctorRepository;
 import tw.edu.fju.miniclinic.model.PatientRepository;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 @RestController
-@RequestMapping("/api/stats")
 public class StatsApiController {
 
     private final DoctorRepository doctorRepo;
@@ -29,32 +25,23 @@ public class StatsApiController {
         this.appointmentRepo = appointmentRepo;
     }
 
-    @GetMapping
-    public ResponseEntity<StatsResponse> getStats() {
-        long totalDoctors = doctorRepo.count();
-        long totalPatients = patientRepo.count();
-        long totalAppointments = appointmentRepo.count();
-
-        List<Object[]> queryResult = appointmentRepo.countByDepartment();
+    @GetMapping("/api/stats")
+    public Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
         
-        Map<String, Long> byDepartment = new LinkedHashMap<>();
-        if (queryResult != null) {
-            for (Object[] row : queryResult) {
-                String deptName = (String) row[0];
-                Long count = (Long) row[1];
-                if (deptName != null) {
-                    byDepartment.put(deptName, count);
-                }
-            }
-        }
+        // 1. 總數統計
+        stats.put("totalDoctors", doctorRepo.count());
+        stats.put("totalPatients", patientRepo.count());
+        stats.put("totalAppointments", appointmentRepo.count());
 
-        StatsResponse response = new StatsResponse(
-                totalDoctors, 
-                totalPatients, 
-                totalAppointments, 
-                byDepartment
-        );
+        // 2. 依狀態統計
+        Map<String, Long> byStatus = new LinkedHashMap<>();
+        byStatus.put("BOOKED", appointmentRepo.countByStatus("BOOKED"));
+        byStatus.put("COMPLETED", appointmentRepo.countByStatus("COMPLETED"));
+        byStatus.put("CANCELLED", appointmentRepo.countByStatus("CANCELLED"));
+        
+        stats.put("byStatus", byStatus);
 
-        return ResponseEntity.ok(response);
+        return stats; 
     }
 }
