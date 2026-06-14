@@ -1,5 +1,6 @@
 package tw.edu.fju.miniclinic.controller;
 
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
